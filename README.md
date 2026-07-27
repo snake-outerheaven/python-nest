@@ -80,6 +80,16 @@ Além disso, a comunidade Python é acolhedora, madura e extremamente ativa — 
 
 ---
 
+## 📄 Licença
+
+| Item | Detalhe |
+|---|---|
+| Licença | [MIT](./LICENSE) |
+| Uso | Livre para usar, copiar, modificar e distribuir, inclusive fins comerciais |
+| Garantia | Nenhuma — o código é fornecido "como está" |
+
+---
+
 ## 🐍 Contato
 
 Dúvidas, sugestões ou feedback?
