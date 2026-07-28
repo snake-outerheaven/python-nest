@@ -1,6 +1,6 @@
-import time as tm
-import sys
 import random as rd
+import sys
+import time as tm
 
 
 def spinner(n, string):
