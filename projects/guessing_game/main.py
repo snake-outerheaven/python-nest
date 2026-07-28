@@ -63,6 +63,7 @@ def saveGame(user, secret, tries):
     saveString = f"|User: {user}|\t|Secret num: {secret}|\t|{f'{tries} try' if tries == 1 else f'{tries} tries'}|"
     with open("GameLog.txt", "a") as saveFile:
         saveFile.write(saveString)
+    os.close(saveFile)
     return saveString
 
 
