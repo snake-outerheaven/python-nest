@@ -2,11 +2,13 @@ import random as rd
 import sys
 import time as tm
 
+# todo: implement saving function to the program
+
 
 def spinner(n, string):
     for i in range(n):
         for c in "/|-\\":
-            sys.stdout.write(f"\rLoading {c}")
+            sys.stdout.write(f"\r{string} {c}")
             sys.stdout.flush()
             tm.sleep(0.2)
     print(f"\r{string}   ")
@@ -58,6 +60,7 @@ def main():
         print(f"Welcome, {user}!")
         spinner(3, "Starting random number module...")
         min_val, max_val = getLimits()
+        spinner(3, "Generating the secret number...")
         secret = rd.randint(min_val, max_val)
         playRound(secret)
     except Exception as e:
