@@ -1,6 +1,8 @@
 import time as tm
 import sys
+import subprocess as sub
 import random as rd
+import os
 
 
 def spinner(n, string):
@@ -10,6 +12,11 @@ def spinner(n, string):
             sys.stdout.flush()
             tm.sleep(0.2)
     print(f"\r{string}   ")
+
+
+def clear():
+    cmd = "cls" if os.name == "nt" else "clear"
+    sub.run(cmd, shell=True)
 
 
 def getUserName():
@@ -47,19 +54,30 @@ def playRound(secret):
                 print("The secret number is lower!")
             else:
                 print(f"You got it in {tries} {'try' if tries == 1 else 'tries'}!")
-                return
+                return tries
         except ValueError:
             print("Please enter a valid number.")
 
 
+def saveGame(user, secret, tries):
+    saveString = f"|User: {user}|\t|Secret num: {secret}|\t|{f'{tries} try' if tries == 1 else f'{tries} tries'}|"
+    with open("GameLog.txt", "a") as saveFile:
+        saveFile.write(saveString)
+    return saveString
+
+
 def main():
     try:
+        clear()
         user = getUserName()
         print(f"Welcome, {user}!")
         spinner(3, "Starting random number module...")
         min_val, max_val = getLimits()
         secret = rd.randint(min_val, max_val)
-        playRound(secret)
+        tries = playRound(secret)
+        spinner(3, "Saving game")
+        saveString = saveGame(user, secret, tries)
+        print(f"Game saved! Log -> {saveString}")
     except Exception as e:
         print(f"Exception raised: {e}")
 
