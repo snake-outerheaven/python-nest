@@ -1,5 +1,7 @@
 import os
 import subprocess as sub
+import re
+import shutil
 
 # Try to use colorama on Windows for reliable colors; fall back to ANSI codes.
 try:
@@ -15,6 +17,7 @@ try:
         "CYAN": Fore.CYAN,
         "MAGENTA": Fore.MAGENTA,
         "WHITE": Fore.WHITE,
+        "DIM": Fore.LIGHTBLACK_EX,
         "RESET": Style.RESET_ALL,
     }
 except Exception:
@@ -25,6 +28,7 @@ except Exception:
         "CYAN": "\u001b[36m",
         "MAGENTA": "\u001b[35m",
         "WHITE": "\u001b[37m",
+        "DIM": "\u001b[90m",
         "RESET": "\u001b[0m",
     }
 
@@ -61,12 +65,31 @@ def fib(n: int) -> int:
     return _fib_pair(n)[0]
 
 
-def boxed_text(lines: list[str], width: int) -> str:
-    horizontal = "─" * (width - 2)
+def strip_ansi(s: str) -> str:
+    """Remove ANSI escape sequences for accurate width calculations."""
+    return re.sub(r"\x1b\[[0-9;]*m", "", s)
+
+
+def boxed_text(lines: list[str], width: int | None = None) -> str:
+    """Draw a box around the provided lines. Width auto-adapts to terminal size if not provided."""
+    clean_lines = [strip_ansi(line) for line in lines]
+    content_width = max((len(line) for line in clean_lines), default=0)
+    term_width = shutil.get_terminal_size((80, 20)).columns
+
+    # decide final width (including box borders)
+    target_inner = content_width + 2  # padding inside
+    if width is None:
+        inner = min(max(target_inner, 10), max(10, term_width - 4))
+    else:
+        inner = min(width - 2, term_width - 4)
+    horizontal = "─" * inner
+
     output = [f"┌{horizontal}┐"]
     for line in lines:
-        padded = line.ljust(width - 2)
-        output.append(f"│{padded}│")
+        clean = strip_ansi(line)
+        # pad based on clean length, keep original coloring at left
+        padded_colored = line + " " * (inner - len(clean))
+        output.append(f"│{padded_colored}│")
     output.append(f"└{horizontal}┘")
     return "\n".join(output)
 
@@ -118,44 +141,53 @@ def prompt_int(prompt: str) -> int:
         )
 
 
+def format_int(v: int) -> str:
+    """Human-friendly integer formatting with commas."""
+    try:
+        return f"{v:,}"
+    except Exception:
+        return str(v)
+
+
 def show_result(n: int, value: int) -> None:
     lines = [
         f"Fibonacci number at position {COLORS['YELLOW']}{n}{COLORS['RESET']}",
         "",
-        f"{COLORS['GREEN']}{value}{COLORS['RESET']}",
+        f"{COLORS['GREEN']}{format_int(value)}{COLORS['RESET']}",
     ]
-    width = (
-        max(
-            len(line.replace(COLORS["RESET"], "").replace(COLORS["YELLOW"], ""))
-            for line in lines
-        )
-        + 6
-    )
-    box = boxed_text(lines, width)
+    box = boxed_text(lines)
     print()
     print(box)
 
 
 def show_sequence(n: int, sequence: list[int]) -> None:
-    lines = [f"Full sequence to position {COLORS['YELLOW']}{n}{COLORS['RESET']}", ""]
-    lines.extend(
-        f"{i:>3}: {COLORS['GREEN']}{value}{COLORS['RESET']}"
+    header = [f"Full sequence to position {COLORS['YELLOW']}{n}{COLORS['RESET']}", ""]
+    entries = [
+        f"{i:>3}: {COLORS['GREEN']}{format_int(value)}{COLORS['RESET']}"
         for i, value in enumerate(sequence)
-    )
-    width = (
-        max(
-            len(
-                line.replace(COLORS["RESET"], "")
-                .replace(COLORS["YELLOW"], "")
-                .replace(COLORS["GREEN"], "")
-            )
-            for line in lines
-        )
-        + 4
-    )
-    box = boxed_text(lines, width)
-    print()
-    print(box)
+    ]
+
+    term_lines = shutil.get_terminal_size((80, 20)).lines
+    page_size = max(8, term_lines - 8)
+    total = len(entries)
+    page = 0
+
+    while True:
+        start = page * page_size
+        end = min(start + page_size, total)
+        page_lines = header + entries[start:end]
+        print()
+        print(boxed_text(page_lines))
+        if end >= total:
+            break
+        prompt = f"{COLORS['CYAN']}Showing {start+1}-{end} of {total}. Press [Enter] next, 'p' prev, 'q' quit:{COLORS['RESET']} "
+        action = input(prompt).strip().lower()
+        if action in {"q", "quit"}:
+            break
+        if action == "p" and page > 0:
+            page -= 1
+            continue
+        page += 1
 
 
 def main() -> None:
