@@ -2,6 +2,7 @@ import os
 import subprocess as sub
 import re
 import shutil
+from typing import Any
 
 # Try to use colorama on Windows for reliable colors; fall back to ANSI codes.
 try:
@@ -10,7 +11,7 @@ try:
     colorama.init()
     from colorama import Fore, Style
 
-    COLORS = {
+    COLORS: dict[str, str] = {
         "RED": Fore.RED,
         "GREEN": Fore.GREEN,
         "YELLOW": Fore.YELLOW,
@@ -20,8 +21,8 @@ try:
         "DIM": Fore.LIGHTBLACK_EX,
         "RESET": Style.RESET_ALL,
     }
-except Exception:
-    COLORS = {
+except ImportError:
+    COLORS: dict[str, str] = {
         "RED": "\u001b[31m",
         "GREEN": "\u001b[32m",
         "YELLOW": "\u001b[33m",
@@ -35,7 +36,7 @@ except Exception:
 try:
     import gmpy2
 except ImportError:
-    gmpy2 = None
+    gmpy2: Any = None
 
 
 def clear() -> None:
